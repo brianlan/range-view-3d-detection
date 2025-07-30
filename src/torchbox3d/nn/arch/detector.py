@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from argparse import Namespace
 from collections import defaultdict
@@ -489,10 +490,10 @@ class Detector(MetaDetector):
                 ).rows():
                     if self.logger is not None:
                         name = f"AP/{category}"
-                        self.logger.experiment.log({name: ap})
+                        self.logger.experiment.add_scalar(name, ap)
 
                         name = f"CDS/{category}"
-                        self.logger.experiment.log({name: cds})
+                        self.logger.experiment.add_scalar(name, cds)
                 print(metrics)
 
             elif self.dataset_name == "waymo":
@@ -513,7 +514,7 @@ class Detector(MetaDetector):
                 ) in metrics.rows():
                     name = f"{metric_name}-{metric_type}-L{level}/{category}/{lower_interval}-{upper_interval}"
                     if self.logger is not None:
-                        self.logger.experiment.log({name: value})
+                        self.logger.experiment.add_scalar(name, value)
 
             # Log artifacts.
             metrics_dir = Path(self.dst_dir) / "results" / self.uuid
@@ -528,11 +529,12 @@ class Detector(MetaDetector):
                 metrics_dir / "metrics.feather",
                 compression="uncompressed",
             )
-            artifact = wandb.Artifact(name=f"{split}_results", type="metrics")
-            artifact.add_file(str(metrics_dir / "detections.feather"))
-            artifact.add_file(str(metrics_dir / "annotations.feather"))
-            artifact.add_file(str(metrics_dir / "metrics.feather"))
-            wandb.log_artifact(artifact)
+            if os.environ.get("WANDB_MODE") != "disabled":
+                artifact = wandb.Artifact(name=f"{split}_results", type="metrics")
+                artifact.add_file(str(metrics_dir / "detections.feather"))
+                artifact.add_file(str(metrics_dir / "annotations.feather"))
+                artifact.add_file(str(metrics_dir / "metrics.feather"))
+                wandb.log_artifact(artifact)
 
         # Wait for all gpus.
         try:

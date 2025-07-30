@@ -114,7 +114,7 @@ def log_image(name: str, img: np.array, trainer: Trainer) -> None:
     if isinstance(trainer.logger, WandbLogger):
         trainer.logger.log_image(f"{stage}", [img], caption=[name])
     elif isinstance(trainer.logger, TensorBoardLogger):
-        img = img.transpose(2, 0, 1)
+        # img = img.permute(2, 0, 1)
         stage = trainer.state.stage
         trainer.logger.experiment.add_image(
             f"{stage}/{name}",
