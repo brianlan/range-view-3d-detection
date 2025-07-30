@@ -25,10 +25,6 @@ import numpy as np
 import polars as pl
 import wandb
 from numpy.typing import NDArray
-from waymo_open_dataset import label_pb2
-from waymo_open_dataset.metrics.python import wod_detection_evaluator
-from waymo_open_dataset.protos import breakdown_pb2, metrics_pb2
-from waymo_open_dataset.protos.metrics_pb2 import Config
 
 logger = logging.getLogger(__name__)
 
@@ -286,7 +282,7 @@ def quat_to_yaw(quat_wxyz: np.array) -> np.array:
     return cast(NDArray, np.arctan2(siny_cosp, cosy_cosp))
 
 
-def build_config(true_positive_type: str) -> Config:
+def build_config(true_positive_type: str):
     """Build a custom detection evaluation config."""
     config = metrics_pb2.Config()
 
@@ -365,6 +361,11 @@ def evaluate() -> None:
 
 
 def evaluate_waymo(dts: pl.DataFrame, gts: pl.DataFrame) -> pl.DataFrame:
+    from waymo_open_dataset import label_pb2
+    from waymo_open_dataset.metrics.python import wod_detection_evaluator
+    from waymo_open_dataset.protos import breakdown_pb2, metrics_pb2
+    from waymo_open_dataset.protos.metrics_pb2 import Config
+
     dts, gts = prepare_data(dts, gts)
     uuid_to_dts = {
         key: group.select(pl.col(DTS_COLS)).to_numpy()
